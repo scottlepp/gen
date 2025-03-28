@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/postGenerator.js",
     "generate-post": "ts-node src/postGenerator.ts",
-    "generate-profile": "ts-node src/profileGenerator.ts"
+    "generate-profile": "ts-node src/profileGenerator.ts",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [
     "exercise",
