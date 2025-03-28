@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/postGenerator.js",
-    "generate-exercise": "ts-node src/postGenerator.ts",
+    "generate-post": "ts-node src/postGenerator.ts",
     "generate-profile": "ts-node src/profileGenerator.ts"
   },
   "keywords": [
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/node-fetch": "^2.6.12",
     "@types/pg": "^8.10.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.0"
