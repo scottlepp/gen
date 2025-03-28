@@ -22,12 +22,19 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
+    - name: Type check
+      run: npm run type-check || exit 1
+    
     - name: Generate Profiles
       env:
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
-      run: npm run generate-profile
+      run: |
+        npm run generate-profile || {
+          echo "Profile generation failed with exit code $?"
+          exit 1
+        }
     
     - name: Notify on failure
       if: failure()
