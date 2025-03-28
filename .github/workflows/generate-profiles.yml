@@ -5,6 +5,11 @@ on:
     - cron: '0 */8 * * *'  # Runs every 8 hours
   workflow_dispatch:  # Allows manual triggering
 
+# Add permissions for creating issues
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   generate-profiles:
     runs-on: ubuntu-latest
