@@ -2,7 +2,7 @@ name: Generate Profiles
 
 on:
   schedule:
-    - cron: '0 */8 * * *'  # Runs every 8 hours
+    - cron: '0 */2 * * *'  # Runs every 2 hours
   workflow_dispatch:  # Allows manual triggering
 
 # Add permissions for creating issues
