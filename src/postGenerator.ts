@@ -133,13 +133,13 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   "Just crushed my squats today! 💪 Feeling stronger than ever. These last few weeks of training have been amazing. Who else loves leg day? 🏋️‍♂️"
   
   Return the response in the following JSON format:
-  {"content": "string"}`;
+  {"content": "string", "title": "string"}`;
   
   const contentResult = await model.generateContent(contentPrompt);
   const content = contentResult.response.text();
   
   // Parse the JSON response
-  let postData: { content: string };
+  let postData: { content: string; title: string };
   try {
     const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
     postData = JSON.parse(cleanContent);
@@ -149,7 +149,7 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   }
 
   // Generate image prompt
-  const imagePrompt = `Create a realistic image of a ${profile.gender} person performing ${exercise} in a gym setting. 
+  const imagePrompt = `Create a real image of a ${profile.gender} person performing ${exercise} in a gym setting. 
   The person should look exactly like the person in the provided profile picture.
   The image should look like a candid gym photo someone might post on social media.
   The person should be in workout clothes and the image should have good lighting.
@@ -244,7 +244,7 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   });
 
   return {
-    title: `${exercise} - Today's Workout`,
+    title: postData.title || `${exercise} - Feeling Strong! 💪`,
     content: postData.content,
     image_url: blob.url,
     author: profile.display_name,
