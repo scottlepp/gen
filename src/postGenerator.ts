@@ -33,6 +33,7 @@ interface Profile {
   display_name: string;
   interests: string[];
   custom_avatar_url: string | null;
+  gender: 'male' | 'female';
 }
 
 async function getRandomProfile(): Promise<Profile> {
@@ -42,7 +43,10 @@ async function getRandomProfile(): Promise<Profile> {
       WITH random_profile AS (
         SELECT p.id, p.user_id, p.display_name, p.custom_avatar_url
         FROM profiles p
-        WHERE p.user_id LIKE '%-gen'
+        WHERE p.user_id LIKE '%-male-gen' 
+           OR p.user_id LIKE '%-female-gen'
+           OR p.user_id LIKE '%_male_gen'
+           OR p.user_id LIKE '%_female_gen'
         ORDER BY RANDOM()
         LIMIT 1
       )
@@ -58,10 +62,36 @@ async function getRandomProfile(): Promise<Profile> {
     `);
 
     if (result.rows.length === 0) {
-      throw new Error('No generated profiles found');
+      throw new Error('No generated profiles found with valid gender suffixes');
     }
 
-    return result.rows[0];
+    // Extract and validate gender from user_id (format: name-gender-gen or name_gender_gen)
+    const user_id = result.rows[0].user_id;
+    
+    // Try both dash and underscore separators
+    const dashParts = user_id.split('-');
+    const underscoreParts = user_id.split('_');
+    
+    let gender: 'male' | 'female';
+    let genderPart: string;
+    
+    // Check which separator was used
+    if (dashParts.length >= 2 && (dashParts[1] === 'male' || dashParts[1] === 'female')) {
+      genderPart = dashParts[1];
+    } else if (underscoreParts.length >= 2 && (underscoreParts[1] === 'male' || underscoreParts[1] === 'female')) {
+      genderPart = underscoreParts[1];
+    } else {
+      console.error('Invalid user_id format:', user_id);
+      throw new Error('Invalid user_id format - missing or invalid gender');
+    }
+    
+    gender = genderPart as 'male' | 'female';
+    console.log('Extracted gender:', gender, 'from user_id:', user_id);
+
+    return {
+      ...result.rows[0],
+      gender
+    };
   } finally {
     client.release();
   }
@@ -87,7 +117,7 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
 
   // Generate content about the exercise
   const contentPrompt = `Create a social media post about doing ${exercise} today. 
-  The person posting is interested in: ${profile.interests.join(', ')}.
+  The person posting is a ${profile.gender} fitness enthusiast interested in: ${profile.interests.join(', ')}.
   
   The post should:
   - Be casual and personal, like a real social media post
@@ -96,6 +126,7 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   - Be engaging and relatable
   - Not be too technical or instructional
   - Feel authentic and natural
+  - Use pronouns appropriate for a ${profile.gender} person
   
   Example style:
   "Just crushed my squats today! 💪 Feeling stronger than ever. These last few weeks of training have been amazing. Who else loves leg day? 🏋️‍♂️"
@@ -117,13 +148,14 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   }
 
   // Generate image prompt
-  const imagePrompt = `Create a realistic image of a person performing ${exercise} in a gym setting. 
+  const imagePrompt = `Create a realistic image of a ${profile.gender} person performing ${exercise} in a gym setting. 
   The person should look exactly like the person in the provided profile picture.
   The image should look like a candid gym photo someone might post on social media.
   The person should be in workout clothes and the image should have good lighting.
   The style should appeal to someone interested in: ${profile.interests.join(', ')}.
   Make it look natural and not too posed or professional.
-  Ensure the person's appearance matches the profile picture exactly.`;
+  Ensure the person's appearance matches the profile picture exactly.
+  The person should be clearly identifiable as ${profile.gender}.`;
 
   // Fetch and convert avatar image to base64
   const avatarBase64 = profile.custom_avatar_url ? await getImageAsBase64(profile.custom_avatar_url) : '';

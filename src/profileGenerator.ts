@@ -23,142 +23,216 @@ interface Profile {
   user_id: string;
   display_name: string;
   bio: string;
-  avatar_url?: string;
+  interests: string[];
   custom_avatar_url: string | null;
+  fitness_level: 'beginner' | 'intermediate' | 'advanced';
+  gender: 'male' | 'female';
 }
 
-async function generateProfileContent(userId: string, preferences: {
-  fitnessLevel?: string;
-  goals?: string[];
-  interests?: string[];
-}): Promise<Profile> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-  // Generate profile content
-  const contentPrompt = `Create a fitness enthusiast profile for a user with the following characteristics:
-  - Fitness Level: ${preferences.fitnessLevel || 'intermediate'}
-  - Goals: ${preferences.goals?.join(', ') || 'general fitness and health'}
-  - Interests: ${preferences.interests?.join(', ') || 'strength training, cardio'}
-  
-  Generate a display name and a compelling bio that reflects their fitness journey and personality.
-  
-  The display name should:
-  - Be 2-3 words maximum
-  - Be fitness-themed but not cheesy
-  - Not include numbers or special characters
-  - Be memorable and unique
-  - Avoid common fitness clichés
-  - Be suitable for a professional fitness app
-  
-  Examples of good display names:
-  - "Iron Will"
-  - "Swift Runner"
-  - "Zen Warrior"
-  - "Peak Performance"
-  - "Core Crusader"
-  
-  Examples of bad display names to avoid:
-  - "FitnessKing123"
-  - "GymRat_2024"
-  - "WorkoutWarrior!!!"
-  - "Fit4Life"
-  - "GymGod"
-  
-  IMPORTANT: Return ONLY a JSON object in this exact format, with no additional text or markdown:
-  {"displayName": "string", "bio": "string"}`;
-
-  const contentResult = await model.generateContent(contentPrompt);
-  const content = contentResult.response.text();
-  
-  // Clean the response and parse JSON
-  let profileData: { displayName: string; bio: string };
+async function getRandomInterests(count: number = 3): Promise<string[]> {
+  const client = await pool.connect();
   try {
-    // Remove any markdown code block markers and clean the response
-    const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
-    profileData = JSON.parse(cleanContent);
+    const result = await client.query(
+      `SELECT name FROM interests ORDER BY RANDOM() LIMIT $1`,
+      [count]
+    );
+    return result.rows.map(row => row.name);
   } catch (error) {
-    console.error('Failed to parse profile data:', error);
-    console.error('Raw content:', content);
-    throw new Error('Invalid profile data format');
+    console.error('Error fetching random interests:', error);
+    // Fallback to default interests if query fails
+    return ['fitness', 'wellness', 'health'];
+  } finally {
+    client.release();
   }
+}
 
-  // Generate avatar prompt
-  const avatarPrompt = `Create a professional fitness avatar image that represents this person:
-  - Display Name: ${profileData.displayName}
-  - Fitness Level: ${preferences.fitnessLevel || 'intermediate'}
-  - Goals: ${preferences.goals?.join(', ') || 'general fitness and health'}
+async function analyzeAvatar(imageData: string): Promise<boolean> {
+  const analysisPrompt = `Analyze this fitness profile avatar and check for the following issues:
+  1. Are the hands anatomically correct and properly positioned?
+  2. Are any weights or equipment shown in a realistic way?
+  3. Is the person's form and posture natural?
+  4. Are there any obvious anatomical distortions?
+  5. Is the lighting and image quality professional?
+  6. Does the person look like a real fitness enthusiast?
   
-  The avatar should be:
-  - Professional and modern looking
-  - Show a fit, healthy person
-  - Have good lighting and composition
-  - Be suitable for a profile picture
-  - Not include any text or logos`;
+  Return ONLY a JSON object in this exact format, with no additional text or markdown:
+  {"hasIssues": boolean, "issues": string[], "qualityScore": number}`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash-exp-image-generation',
-    contents: avatarPrompt,
-    config: {
-      responseModalities: ['Text', 'Image']
-    },
-  });
+  let analysisResult;
+  try {
+    console.log('Starting avatar analysis...');
+    analysisResult = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp-image-generation',
+      contents: [
+        {
+          parts: [
+            { text: analysisPrompt },
+            {
+              inlineData: {
+                mimeType: 'image/png',
+                data: imageData
+              }
+            }
+          ]
+        }
+      ],
+      config: {
+        responseModalities: ['Text']
+      }
+    });
 
+    if (!analysisResult?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      console.error('Invalid analysis result structure:', JSON.stringify(analysisResult, null, 2));
+      return true;
+    }
+
+    const rawContent = analysisResult.candidates[0].content.parts[0].text;
+    console.log('Raw analysis response:', rawContent);
+
+    // Clean the response by removing markdown code block markers and whitespace
+    const cleanContent = rawContent.replace(/```json\n?|\n?```/g, '').trim();
+    console.log('Cleaned analysis response:', cleanContent);
+    
+    let analysis;
+    try {
+      analysis = JSON.parse(cleanContent);
+    } catch (parseError) {
+      console.error('Failed to parse analysis JSON:', parseError);
+      console.error('Attempted to parse:', cleanContent);
+      return true;
+    }
+
+    console.log('Parsed analysis result:', {
+      hasIssues: analysis.hasIssues,
+      issues: analysis.issues,
+      qualityScore: analysis.qualityScore
+    });
+
+    if (typeof analysis.hasIssues !== 'boolean' || 
+        !Array.isArray(analysis.issues) || 
+        typeof analysis.qualityScore !== 'number') {
+      console.error('Invalid analysis structure:', analysis);
+      return true;
+    }
+
+    return analysis.hasIssues;
+  } catch (error) {
+    console.error('Error in avatar analysis:', error);
+    if (error instanceof Error) {
+      console.error('Error stack:', error.stack);
+    }
+    console.error('Analysis result at time of error:', analysisResult);
+    return true; // Assume issues if analysis fails
+  }
+}
+
+async function generateAvatar(gender: string, fitnessLevel: string, maxAttempts: number = 3): Promise<string> {
+  let attempts = 0;
   let imageData: string | null = null;
+  let hasIssues = true;
 
-  for (const part of response.candidates[0].content.parts) {
-    if (part.text) {
-      console.log(part.text);
-    } else if (part.inlineData && part.inlineData.data) {
-      imageData = part.inlineData.data;
-      const buffer = Buffer.from(part.inlineData.data, 'base64');
-      fs.writeFileSync('profile-avatar.png', buffer);
-      console.log('Avatar saved as profile-avatar.png');
+  while (attempts < maxAttempts && hasIssues) {
+    attempts++;
+    console.log(`Generating avatar attempt ${attempts}/${maxAttempts}`);
+
+    const imagePrompt = `Create a profile picture of a ${gender} person who looks like a fitness enthusiast.
+    The person should be in workout clothes and have a natural, confident expression.
+    The image should be well-lit and look like a professional headshot.
+    The person should look like they are at a ${fitnessLevel} fitness level.
+    The style should be modern and appealing to fitness enthusiasts.
+    The person should be clearly identifiable as ${gender}.
+    
+    Important details:
+    - Hands should be anatomically correct and naturally positioned
+    - If showing weights or equipment, they should be properly placed and realistic
+    - The person's form and posture should be natural and professional
+    - No anatomical distortions or unrealistic features
+    - Professional lighting and image quality
+    - The person should look like a real fitness enthusiast, not a model`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp-image-generation',
+      contents: imagePrompt,
+      config: {
+        responseModalities: ['Text', 'Image']
+      },
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData && part.inlineData.data) {
+        imageData = part.inlineData.data;
+        break;
+      }
+    }
+
+    if (imageData) {
+      hasIssues = await analyzeAvatar(imageData);
+      if (hasIssues) {
+        console.log('Avatar has issues, regenerating...');
+      }
     }
   }
 
   if (!imageData) {
-    throw new Error('Failed to generate avatar');
+    throw new Error('Failed to generate acceptable avatar after multiple attempts');
   }
 
-  // Analyze the generated avatar
-//   const analysisPrompt = `Analyze this fitness profile avatar and provide a rating from 1-10, where:
-//   1 = Completely unsuitable
-//   10 = Perfect representation
-  
-//   Consider these criteria:
-//   1. Professional appearance (0-3 points)
-//   2. Fitness representation (0-3 points)
-//   3. Image quality and lighting (0-2 points)
-//   4. Profile picture suitability (0-2 points)
-  
-//   Start your response with "Rating: X/10" followed by a detailed explanation of the score and any issues found.`;
+  return imageData;
+}
 
-//   const analysisResult = await ai.models.generateContent({
-//     model: 'gemini-2.0-flash-exp-image-generation',
-//     contents: [
-//       {
-//         parts: [
-//           { text: analysisPrompt },
-//           {
-//             inlineData: {
-//               mimeType: 'image/png',
-//               data: imageData
-//             }
-//           }
-//         ]
-//       }
-//     ],
-//     config: {
-//       responseModalities: ['Text']
-//     }
-//   });
+async function generateProfileContent(): Promise<Profile> {
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  
+  // Get random interests first
+  const interests = await getRandomInterests();
+  const gender = Math.random() < 0.5 ? 'male' : 'female';
+  const fitnessLevel = ['beginner', 'intermediate', 'advanced'][Math.floor(Math.random() * 3)];
 
-//   const analysis = analysisResult.candidates[0].content.parts[0].text;
-//   console.log('Avatar Analysis:', analysis);
+  // Generate content about the profile
+  const contentPrompt = `Create a social media profile for a ${gender} fitness enthusiast. 
+  The person should be a ${fitnessLevel} level fitness enthusiast.
+  Their main interests are: ${interests.join(', ')}.
+  
+  The profile should:
+  - Have a unique, memorable display name (max 30 characters)
+  - Include a personal bio that reflects their fitness journey and goals
+  - Feel authentic and relatable
+  - Match their fitness level in tone and experience
+  - Reference their interests naturally in the bio
+  - Use pronouns appropriate for a ${gender} person
+  
+  Example display names (DO NOT USE THESE):
+  - "FitnessGuru123"
+  - "WorkoutWarrior"
+  - "GymLifePro"
+  
+  Example display names (GOOD):
+  - "SarahLifts"
+  - "MikeOnTheMove"
+  - "JenFitnessJourney"
+  
+  Return the response in the following JSON format:
+  {"displayName": "string", "bio": "string"}`;
+  
+  const result = await model.generateContent(contentPrompt);
+  const content = result.response.text();
+  
+  // Parse the JSON response
+  let profileData: { displayName: string; bio: string };
+  try {
+    const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+    profileData = JSON.parse(cleanContent);
+  } catch (error) {
+    console.error('Failed to parse profile data:', error);
+    throw new Error('Invalid profile data format');
+  }
+
+  // Generate avatar with analysis and regeneration
+  const imageData = await generateAvatar(gender, fitnessLevel);
 
   // Create a Blob from the image data
   const imageBlob = new Blob([Buffer.from(imageData, 'base64')], { type: 'image/png' });
-  const imageFileName = `avatars/${userId}-${Date.now()}.png`;
+  const imageFileName = `avatars/${profileData.displayName.toLowerCase().replace(/\s+/g, '')}-gen-${Date.now()}.png`;
 
   // Upload to Vercel Blob
   const blob = await put(imageFileName, imageBlob, {
@@ -166,24 +240,51 @@ async function generateProfileContent(userId: string, preferences: {
   });
 
   return {
-    user_id: userId,
+    user_id: `${profileData.displayName.toLowerCase().replace(/\s+/g, '')}_${gender}_gen`,
     display_name: profileData.displayName,
     bio: profileData.bio,
-    avatar_url: undefined,
-    custom_avatar_url: blob.url
+    interests: interests,
+    custom_avatar_url: blob.url,
+    fitness_level: fitnessLevel as 'beginner' | 'intermediate' | 'advanced',
+    gender: gender
   };
 }
 
 async function saveToDatabase(profile: Profile): Promise<void> {
   const client = await pool.connect();
   try {
-    await client.query(
-      `INSERT INTO profiles (user_id, display_name, bio, avatar_url, custom_avatar_url)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [profile.user_id, profile.display_name, profile.bio, profile.avatar_url, profile.custom_avatar_url]
+    // Start a transaction
+    await client.query('BEGIN');
+
+    // Insert the profile
+    const profileResult = await client.query(
+      `INSERT INTO profiles (user_id, display_name, bio, custom_avatar_url, fitness_level)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id`,
+      [profile.user_id, profile.display_name, profile.bio, profile.custom_avatar_url, profile.fitness_level]
     );
-    console.log('Profile saved successfully');
+
+    const profileId = profileResult.rows[0].id;
+
+    // Get interest IDs
+    const interestResult = await client.query(
+      `SELECT id FROM interests WHERE name = ANY($1)`,
+      [profile.interests]
+    );
+
+    // Insert profile interests
+    for (const interest of interestResult.rows) {
+      await client.query(
+        `INSERT INTO profile_interests (profile_id, interest_id)
+         VALUES ($1, $2)`,
+        [profileId, interest.id]
+      );
+    }
+
+    await client.query('COMMIT');
+    console.log('Profile and interests saved successfully');
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error saving to database:', error);
     throw error;
   } finally {
@@ -191,15 +292,11 @@ async function saveToDatabase(profile: Profile): Promise<void> {
   }
 }
 
-async function generateAndSaveProfile(userId: string, preferences: {
-  fitnessLevel?: string;
-  goals?: string[];
-  interests?: string[];
-}): Promise<void> {
+async function generateAndSaveProfile(): Promise<void> {
   try {
-    const profile = await generateProfileContent(userId, preferences);
+    const profile = await generateProfileContent();
     await saveToDatabase(profile);
-    console.log(`Successfully generated and saved profile for user ${userId}`);
+    console.log(`Successfully generated and saved profile for user ${profile.user_id}`);
   } catch (error) {
     console.error('Error in generateAndSaveProfile:', error);
     throw error;
@@ -209,11 +306,7 @@ async function generateAndSaveProfile(userId: string, preferences: {
 // Example usage
 async function main() {
   try {
-    await generateAndSaveProfile(`user-${Date.now()}-gen`, {
-      fitnessLevel: 'intermediate',
-      goals: ['strength training', 'weight loss'],
-      interests: ['yoga', 'running', 'nutrition']
-    });
+    await generateAndSaveProfile();
   } catch (error) {
     console.error('Main error:', error);
   } finally {
