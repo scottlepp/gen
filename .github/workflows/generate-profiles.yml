@@ -8,6 +8,7 @@ on:
 jobs:
   generate-profiles:
     runs-on: ubuntu-latest
+    environment: dev  # Specify the environment name
     
     steps:
     - uses: actions/checkout@v4
