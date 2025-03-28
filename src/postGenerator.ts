@@ -43,10 +43,10 @@ async function getRandomProfile(): Promise<Profile> {
       WITH random_profile AS (
         SELECT p.id, p.user_id, p.display_name, p.custom_avatar_url
         FROM profiles p
-        WHERE p.user_id LIKE '%-male-gen' 
-           OR p.user_id LIKE '%-female-gen'
-           OR p.user_id LIKE '%_male_gen'
-           OR p.user_id LIKE '%_female_gen'
+        WHERE p.user_id LIKE '%-m-g' 
+           OR p.user_id LIKE '%-f-g'
+           OR p.user_id LIKE '%_m_g'
+           OR p.user_id LIKE '%_f_g'
         ORDER BY RANDOM()
         LIMIT 1
       )
@@ -76,16 +76,17 @@ async function getRandomProfile(): Promise<Profile> {
     let genderPart: string;
     
     // Check which separator was used
-    if (dashParts.length >= 2 && (dashParts[1] === 'male' || dashParts[1] === 'female')) {
+    if (dashParts.length >= 2 && (dashParts[1] === 'm' || dashParts[1] === 'f')) {
       genderPart = dashParts[1];
-    } else if (underscoreParts.length >= 2 && (underscoreParts[1] === 'male' || underscoreParts[1] === 'female')) {
+    } else if (underscoreParts.length >= 2 && (underscoreParts[1] === 'm' || underscoreParts[1] === 'f')) {
       genderPart = underscoreParts[1];
     } else {
       console.error('Invalid user_id format:', user_id);
       throw new Error('Invalid user_id format - missing or invalid gender');
     }
     
-    gender = genderPart as 'male' | 'female';
+    const genderAbbt = genderPart as 'm' | 'f';
+    gender = genderAbbt === 'm' ? 'male' : 'female';
     console.log('Extracted gender:', gender, 'from user_id:', user_id);
 
     return {

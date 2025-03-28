@@ -232,15 +232,16 @@ async function generateProfileContent(): Promise<Profile> {
 
   // Create a Blob from the image data
   const imageBlob = new Blob([Buffer.from(imageData, 'base64')], { type: 'image/png' });
-  const imageFileName = `avatars/${profileData.displayName.toLowerCase().replace(/\s+/g, '')}-gen-${Date.now()}.png`;
+  const imageFileName = `avatars/${profileData.displayName.toLowerCase().replace(/\s+/g, '')}-g-${Date.now()}.png`;
 
   // Upload to Vercel Blob
   const blob = await put(imageFileName, imageBlob, {
     access: 'public',
   });
 
+  const g = gender === 'male' ? 'm' : 'f';
   return {
-    user_id: `${profileData.displayName.toLowerCase().replace(/\s+/g, '')}_${gender}_gen`,
+    user_id: `${profileData.displayName.toLowerCase().replace(/\s+/g, '')}-${g}-g`,
     display_name: profileData.displayName,
     bio: profileData.bio,
     interests: interests,
