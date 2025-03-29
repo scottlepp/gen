@@ -9,6 +9,7 @@
     "generate-post": "ts-node src/postGenerator.ts",
     "generate-comment": "ts-node src/commentGenerator.ts",
     "generate-reply": "ts-node src/commentReplyGenerator.ts",
+    "generate-like": "ts-node src/likeGenerator.ts",
     "type-check": "tsc --noEmit"
   },
   "keywords": [],
