@@ -36,6 +36,23 @@ interface Profile {
   gender: 'male' | 'female';
 }
 
+async function hasPostedToday(userId: string): Promise<boolean> {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT COUNT(*) as count 
+       FROM posts 
+       WHERE user_id = $1 
+       AND created_at >= CURRENT_DATE 
+       AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
+      [userId]
+    );
+    return parseInt(result.rows[0].count) > 0;
+  } finally {
+    client.release();
+  }
+}
+
 async function getRandomProfile(): Promise<Profile> {
   const client = await pool.connect();
   try {
@@ -47,6 +64,13 @@ async function getRandomProfile(): Promise<Profile> {
            OR p.user_id LIKE '%-f-g'
            OR p.user_id LIKE '%_m_g'
            OR p.user_id LIKE '%_f_g'
+        AND NOT EXISTS (
+          SELECT 1 
+          FROM posts 
+          WHERE posts.user_id = p.user_id 
+          AND posts.created_at >= CURRENT_DATE 
+          AND posts.created_at < CURRENT_DATE + INTERVAL '1 day'
+        )
         ORDER BY RANDOM()
         LIMIT 1
       )
@@ -62,7 +86,7 @@ async function getRandomProfile(): Promise<Profile> {
     `);
 
     if (result.rows.length === 0) {
-      throw new Error('No generated profiles found with valid gender suffixes');
+      throw new Error('No available profiles found that haven\'t posted today');
     }
 
     // Extract and validate gender from user_id (format: name-gender-gen or name_gender_gen)
@@ -272,6 +296,13 @@ async function saveToDatabase(post: ExercisePost): Promise<void> {
 async function generateAndSavePost(exercise: string): Promise<void> {
   try {
     const profile = await getRandomProfile();
+    
+    // Double-check if the user has posted today (race condition protection)
+    if (await hasPostedToday(profile.user_id)) {
+      console.log(`User ${profile.user_id} has already posted today, skipping...`);
+      return;
+    }
+
     const post = await generatePostContent(exercise, profile);
     await saveToDatabase(post);
     console.log(`Successfully generated and saved content for ${exercise}`);
