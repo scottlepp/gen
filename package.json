@@ -1,35 +1,27 @@
 {
-  "name": "exercise-content-generator",
+  "name": "gen",
   "version": "1.0.0",
-  "description": "Generate exercise content using Google Gemini AI",
-  "main": "dist/exerciseGenerator.js",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/postGenerator.js",
-    "generate-post": "ts-node src/postGenerator.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
     "generate-profile": "ts-node src/profileGenerator.ts",
+    "generate-post": "ts-node src/postGenerator.ts",
+    "generate-comment": "ts-node src/commentGenerator.ts",
     "type-check": "tsc --noEmit"
   },
-  "keywords": [
-    "exercise",
-    "ai",
-    "gemini",
-    "content-generation"
-  ],
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/genai": "^0.7.0",
-    "@google/generative-ai": "^0.1.3",
-    "@vercel/blob": "^0.27.3",
-    "dotenv": "^16.0.3",
-    "pg": "^8.11.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/node-fetch": "^2.6.12",
-    "@types/pg": "^8.10.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.0"
+    "@google/generative-ai": "^0.2.1",
+    "@types/node": "^20.11.24",
+    "@types/node-fetch": "^2.6.11",
+    "@vercel/blob": "^0.22.1",
+    "dotenv": "^16.4.5",
+    "node-fetch": "^2.7.0",
+    "pg": "^8.11.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }
