@@ -152,9 +152,10 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   - Not be too technical or instructional
   - Feel authentic and natural
   - Use pronouns appropriate for a ${profile.gender} person
+  - Not overuse emojis or hashtags, but can include one or two
   
   Example style:
-  "Just crushed my squats today! 💪 Feeling stronger than ever. These last few weeks of training have been amazing. Who else loves leg day? 🏋️‍♂️"
+  "Just crushed my squats today! Feeling stronger than ever. These last few weeks of training have been amazing. Who else loves leg day?"
   
   Return the response in the following JSON format:
   {"content": "string", "title": "string"}`;
@@ -223,40 +224,40 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   }
 
   // Analyze the generated image
-  const analysisPrompt = `Analyze this image of a person performing ${exercise} and provide a rating from 1-10, where:
-  1 = Completely incorrect/unsuitable
-  10 = Perfect representation
+  // const analysisPrompt = `Analyze this image of a person performing ${exercise} and provide a rating from 1-10, where:
+  // 1 = Completely incorrect/unsuitable
+  // 10 = Perfect representation
   
-  Consider these criteria:
-  1. Correct exercise form (0-3 points)
-  2. Clear visibility of the exercise (0-2 points)
-  3. Image quality and lighting (0-2 points)
-  4. Appropriate gym setting (0-3 points)
+  // Consider these criteria:
+  // 1. Correct exercise form (0-3 points)
+  // 2. Clear visibility of the exercise (0-2 points)
+  // 3. Image quality and lighting (0-2 points)
+  // 4. Appropriate gym setting (0-3 points)
   
-  Start your response with "Rating: X/10" followed by a detailed explanation of the score and any issues found.`;
+  // Start your response with "Rating: X/10" followed by a detailed explanation of the score and any issues found.`;
 
-  const analysisResult = await ai.models.generateContent({
-    model: 'gemini-2.0-flash-exp-image-generation',
-    contents: [
-      {
-        parts: [
-          { text: analysisPrompt },
-          {
-            inlineData: {
-              mimeType: 'image/png',
-              data: imageData
-            }
-          }
-        ]
-      }
-    ],
-    config: {
-      responseModalities: ['Text']
-    }
-  });
+  // const analysisResult = await ai.models.generateContent({
+  //   model: 'gemini-2.0-flash-exp-image-generation',
+  //   contents: [
+  //     {
+  //       parts: [
+  //         { text: analysisPrompt },
+  //         {
+  //           inlineData: {
+  //             mimeType: 'image/png',
+  //             data: imageData
+  //           }
+  //         }
+  //       ]
+  //     }
+  //   ],
+  //   config: {
+  //     responseModalities: ['Text']
+  //   }
+  // });
 
-  const analysis = analysisResult.candidates[0].content.parts[0].text;
-  console.log('Image Analysis:', analysis);
+  // const analysis = analysisResult.candidates[0].content.parts[0].text;
+  // console.log('Image Analysis:', analysis);
 
   // Create a Blob from the image data
   const imageBlob = new Blob([Buffer.from(imageData, 'base64')], { type: 'image/png' });
