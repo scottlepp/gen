@@ -138,7 +138,7 @@ async function getImageAsBase64(url: string): Promise<string> {
 
 async function generatePostContent(exercise: string, profile: Profile): Promise<ExercisePost> {
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-  const imageModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp-image-generation' })
+  // const imageModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp-image-generation' })
 
   // Generate content about the exercise
   const contentPrompt = `Create a social media post about doing ${exercise} today. 
@@ -181,7 +181,8 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   The style should appeal to someone interested in: ${profile.interests.join(', ')}.
   Make it look natural and not too posed or professional.
   Ensure the person's appearance matches the profile picture exactly.
-  The person should be clearly identifiable as ${profile.gender}.`;
+  The person should be clearly identifiable as ${profile.gender}.
+  The image should be an aspect ratio of 16:9.`;
 
   // Fetch and convert avatar image to base64
   const avatarBase64 = profile.custom_avatar_url ? await getImageAsBase64(profile.custom_avatar_url) : '';
