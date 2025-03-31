@@ -182,6 +182,7 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   Make it look natural and not too posed or professional.
   Ensure the person's appearance matches the profile picture exactly.
   The person should be clearly identifiable as ${profile.gender}.
+  The pose of the person should not defy gravity.
   The image should be an aspect ratio of 16:9.`;
 
   // Fetch and convert avatar image to base64

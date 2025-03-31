@@ -102,39 +102,39 @@ async function generateComment(post: Post, profile: { user_id: string; display_n
       examples: [
         "You're crushing it! 💪 Keep pushing! 🔥",
         "This is amazing progress! 🌟",
-        "Way to go! You're inspiring! 🎯"
+        "Way to go! You're inspiring!"
       ]
     },
     {
       name: "personal_connection",
       examples: [
         "I feel the same way about this exercise! 💯",
-        "This is exactly what I needed to see today! 🙌",
-        "Totally relate to this! Same here! 🤝"
+        "This is exactly what I needed to see today!",
+        "Totally relate to this! Same here!"
       ]
     },
     {
       name: "technical_tip",
       examples: [
-        "Try adding a slight pause at the bottom next time! 💡",
-        "Your form looks great! Maybe try a wider stance? 🎯",
-        "That's a great variation! Have you tried adding a pause? 💪"
+        "Try adding a slight pause at the bottom next time!",
+        "Your form looks great! Maybe try a wider stance?",
+        "That's a great variation! Have you tried adding a pause?"
       ]
     },
     {
       name: "motivational",
       examples: [
-        "This is the energy I needed today! ⚡️",
-        "You're making it happen! Keep going! 🚀",
-        "This is what dedication looks like! 💫"
+        "This is the energy I needed today!",
+        "You're making it happen! Keep going!",
+        "This is what dedication looks like!"
       ]
     },
     {
       name: "community",
       examples: [
         "Who else loves this exercise? 🙋‍♂️",
-        "Let's get a group going for this! 👥",
-        "Anyone want to try this together? 🤝"
+        "Let's get a group going for this!",
+        "Anyone want to try this together?"
       ]
     }
   ];
@@ -152,7 +152,7 @@ The comment should:
 - Be in a ${selectedStyle.name} style
 - Be engaging and supportive
 - Relate to the specific exercise or content mentioned
-- Include relevant emojis
+- Include relevant emojis, but not always
 - Feel natural and conversational
 - Be 1-2 sentences long
 - Not be too technical or instructional
@@ -165,7 +165,6 @@ Example style:
 Additional context:
 - The commenter is a fitness enthusiast
 - The comment should feel authentic and personal
-- Use appropriate emojis that match the style
 - Keep it casual and friendly
 
 Return the response in the following JSON format:
