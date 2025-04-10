@@ -35,10 +35,8 @@ jobs:
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
-        npm run generate-comment || {
-          echo "Comment generation failed with exit code $?"
-          exit 1
-        }
+        set -e
+        npm run generate-comment
     
     - name: Notify on failure
       if: failure()

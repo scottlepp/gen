@@ -148,6 +148,7 @@ async function main() {
     await generateAndSaveLike();
   } catch (error) {
     console.error('Main error:', error);
+    process.exit(1); // Exit with error code
   } finally {
     await pool.end();
   }

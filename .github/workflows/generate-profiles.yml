@@ -36,10 +36,8 @@ jobs:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       run: |
-        npm run generate-profile || {
-          echo "Profile generation failed with exit code $?"
-          exit 1
-        }
+        set -e
+        npm run generate-profile
     
     - name: Notify on failure
       if: failure()
