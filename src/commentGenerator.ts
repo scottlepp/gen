@@ -35,18 +35,19 @@ interface Post {
 async function getRandomPost(excludeUserId: string): Promise<Post> {
   const client = await pool.connect();
   try {
+    // TODO: Uncomment this when we want to exclude posts that have already been commented on today
+      // AND NOT EXISTS (
+      //   SELECT 1 
+      //   FROM comments c 
+      //   WHERE c.post_id = p.id 
+      //   AND c.created_at >= CURRENT_DATE 
+      //   AND c.created_at < CURRENT_DATE + INTERVAL '1 day'
+      // )
     const result = await client.query(`
       SELECT p.id, p.title, p.content, p.author, p.user_id
       FROM posts p
       WHERE p.created_at >= NOW() - INTERVAL '24 hours'
       AND p.user_id != $1
-      AND NOT EXISTS (
-        SELECT 1 
-        FROM comments c 
-        WHERE c.post_id = p.id 
-        AND c.created_at >= CURRENT_DATE 
-        AND c.created_at < CURRENT_DATE + INTERVAL '1 day'
-      )
       ORDER BY RANDOM()
       LIMIT 1
     `, [excludeUserId]);
