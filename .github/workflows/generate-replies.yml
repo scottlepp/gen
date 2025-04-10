@@ -2,7 +2,7 @@ name: Generate Comment Replies
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # Run every 2 hours
+    - cron: '*/30 * * * *'  # Runs every 30 minutes
   workflow_dispatch:  # Allow manual triggering
 
 permissions:
@@ -12,6 +12,8 @@ permissions:
 jobs:
   generate-replies:
     runs-on: ubuntu-latest
+    environment: dev
+
     steps:
       - uses: actions/checkout@v4
       
