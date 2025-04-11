@@ -53,7 +53,7 @@ async function getRandomPost(excludeUserId: string): Promise<Post> {
       WITH post_stats AS (
         SELECT 
           COUNT(*) as total_posts,
-          COUNT(*) FILTER (WHERE p.created_at < NOW() - INTERVAL '24 hours') as too_old,
+          COUNT(*) FILTER (WHERE p.created_at < NOW() - INTERVAL '80 hours') as too_old,
           COUNT(*) FILTER (WHERE p.user_id = $1) as own_posts,
           COUNT(*) FILTER (WHERE EXISTS (
             SELECT 1 
@@ -62,14 +62,14 @@ async function getRandomPost(excludeUserId: string): Promise<Post> {
             AND l.user_id = $1
           )) as already_liked
         FROM posts p
-        WHERE p.created_at >= NOW() - INTERVAL '24 hours'
+        WHERE p.created_at >= NOW() - INTERVAL '80 hours'
       )
       SELECT * FROM post_stats
     `, [excludeUserId]);
 
     const stats = statsResult.rows[0];
     console.log('Post Statistics:');
-    console.log(`- Total posts in last 24 hours: ${stats.total_posts}`);
+    console.log(`- Total posts in last 80 hours: ${stats.total_posts}`);
     console.log(`- Skipped (too old): ${stats.too_old}`);
     console.log(`- Skipped (own posts): ${stats.own_posts}`);
     console.log(`- Skipped (already liked): ${stats.already_liked}`);
@@ -77,7 +77,7 @@ async function getRandomPost(excludeUserId: string): Promise<Post> {
     const result = await client.query(`
       SELECT p.id, p.title, p.content, p.author, p.user_id
       FROM posts p
-      WHERE p.created_at >= NOW() - INTERVAL '24 hours'
+      WHERE p.created_at >= NOW() - INTERVAL '80 hours'
       AND p.user_id != $1
       AND NOT EXISTS (
         SELECT 1 
