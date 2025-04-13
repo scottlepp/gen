@@ -148,7 +148,9 @@ async function generateAndSaveLike(): Promise<void> {
 // Example usage
 async function main() {
   try {
-    await generateAndSaveLike();
+    for (let i = 0; i < 10; i++) {
+      await generateAndSaveLike();
+    }
   } catch (error) {
     console.error('Main error:', error);
     process.exit(1); // Exit with error code
