@@ -147,15 +147,26 @@ async function generateAndSaveLike(): Promise<void> {
 
 // Example usage
 async function main() {
+  let error = undefined;
   try {
     for (let i = 0; i < 10; i++) {
-      await generateAndSaveLike();
+      try {
+        await generateAndSaveLike();
+      } catch (e) {
+        console.error('Error in main:', e);
+        error = e;
+      }
     }
   } catch (error) {
     console.error('Main error:', error);
     process.exit(1); // Exit with error code
   } finally {
     await pool.end();
+  }
+
+  if (error !== undefined) {
+    console.error('Main error:', error);
+    process.exit(1); // Exit with error code
   }
 }
 
