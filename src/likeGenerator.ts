@@ -29,8 +29,11 @@ async function getRandomProfile(): Promise<Profile> {
   try {
     const result = await client.query(`
       SELECT user_id, display_name
-      FROM profiles
-      WHERE user_id LIKE '%-gen'
+      FROM profiles p
+      WHERE p.user_id LIKE '%-m-g' 
+         OR p.user_id LIKE '%-f-g'
+         OR p.user_id LIKE '%_m_g'
+         OR p.user_id LIKE '%_f_g'
       ORDER BY RANDOM()
       LIMIT 1
     `);
