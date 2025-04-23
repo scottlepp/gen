@@ -182,51 +182,51 @@ async function generateReply(comment: Comment, post: Post, author: { user_id: st
     {
       name: "friendly",
       examples: [
-        "You're awesome! Thanks for the motivation! ⚡️",
-        "Love the energy! Let's keep each other accountable! 💫",
-        "You get it! Thanks for the support! 🎯",
-        "Your positivity is contagious! 🌟 Keep spreading it! 💫",
-        "This community is the best! Thanks for being part of it! 🤝"
+        "You're awesome! Thanks for the motivation!",
+        "Love the energy! Let's keep each other accountable!",
+        "You get it! Thanks for the support!",
+        "Your positivity is contagious! Keep spreading it!",
+        "This community is the best! Thanks for being part of it!"
       ]
     },
     {
       name: "technical",
       examples: [
-        "Thanks! I'll try that variation next time! 💡",
-        "Appreciate the tip! Will definitely incorporate that! 🎯",
-        "Great suggestion! I'll give it a shot! 💪",
-        "That's a game-changer! Can't wait to try it! 🎯",
-        "Your form tips are always spot-on! 💪"
+        "Thanks! I'll try that variation next time!",
+        "Appreciate the tip! Will definitely incorporate that!",
+        "Great suggestion! I'll give it a shot!",
+        "That's a game-changer! Can't wait to try it!",
+        "Your form tips are always spot-on!"
       ]
     },
     {
       name: "motivational",
       examples: [
-        "Your progress is inspiring! Keep pushing! 🚀",
-        "We're all in this together! Let's crush it! 💪",
-        "Your dedication is contagious! 🔥",
-        "This is what community is about! 🙌",
-        "You're making amazing progress! Keep going! ⭐️"
+        "Your progress is inspiring! Keep pushing!",
+        "We're all in this together! Let's crush it!",
+        "Your dedication is contagious!",
+        "This is what community is about!",
+        "You're making amazing progress! Keep going!"
       ]
     },
     {
       name: "personal",
       examples: [
-        "Totally relate to what you're saying! 💯",
-        "Been there! Your advice is spot-on! 🙌",
-        "This hits home! Thanks for sharing! 💫",
-        "Your journey is inspiring! 🌟",
-        "We're on the same wavelength! 💪"
+        "Totally relate to what you're saying!",
+        "Been there! Your advice is spot-on!",
+        "This hits home! Thanks for sharing!",
+        "Your journey is inspiring!",
+        "We're on the same wavelength!"
       ]
     },
     {
       name: "celebratory",
       examples: [
-        "Let's celebrate this win! 🎉",
-        "You're crushing it! 🏆",
-        "This is amazing progress! 🌟",
-        "Way to go! 🎯",
-        "You're on fire! 🔥"
+        "Let's celebrate this win!",
+        "You're crushing it!",
+        "This is amazing progress!",
+        "Way to go!",
+        "You're on fire!"
       ]
     }
   ];
@@ -246,12 +246,12 @@ The reply should:
 - Tag the comment author using @${comment.author}
 - Be engaging and friendly
 - Relate to the specific exercise or content mentioned
-- Include relevant emojis
 - Feel natural and conversational
 - Be 1-2 sentences long
 - Not be too technical or instructional
 - Match the tone of a fitness app comment
 - Be unique and not copy the example exactly
+- Don't use emojis
 
 Example style:
 "${example}"
