@@ -10,6 +10,7 @@
     "generate-comment": "ts-node src/commentGenerator.ts",
     "generate-reply": "ts-node src/commentReplyGenerator.ts",
     "generate-like": "ts-node src/likeGenerator.ts",
+    "generate-follower": "ts-node src/followerGenerator.ts",
     "type-check": "tsc --noEmit"
   },
   "keywords": [],
