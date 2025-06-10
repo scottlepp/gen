@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const { GoogleGenAI } = require("@google/genai");
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
-import { put } from '@vercel/blob';
+import { StorageFactory } from './storage/StorageFactory';
 import fs from 'fs';
 
 dotenv.config();
@@ -61,32 +61,22 @@ async function analyzeAvatar(imageData: string): Promise<boolean> {
   let analysisResult;
   try {
     console.log('Starting avatar analysis...');
-    analysisResult = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp-image-generation',
-      contents: [
-        {
-          parts: [
-            { text: analysisPrompt },
-            {
-              inlineData: {
-                mimeType: 'image/png',
-                data: imageData
-              }
-            }
-          ]
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
+    analysisResult = await model.generateContent([
+      analysisPrompt,
+      {
+        inlineData: {
+          mimeType: 'image/png',
+          data: imageData
         }
-      ],
-      config: {
-        responseModalities: ['Text']
       }
-    });
+    ]);
 
-    if (!analysisResult?.candidates?.[0]?.content?.parts?.[0]?.text) {
+    const rawContent = analysisResult.response.text();
+    if (!rawContent) {
       console.error('Invalid analysis result structure:', JSON.stringify(analysisResult, null, 2));
       return true;
     }
-
-    const rawContent = analysisResult.candidates[0].content.parts[0].text;
     console.log('Raw analysis response:', rawContent);
 
     // Clean the response by removing markdown code block markers and whitespace
@@ -151,7 +141,7 @@ async function generateAvatar(gender: string, fitnessLevel: string, maxAttempts:
     - The person should look like a real fitness enthusiast, not a model`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp-image-generation',
+      model: 'gemini-2.0-flash-preview-image-generation',
       contents: imagePrompt,
       config: {
         responseModalities: ['Text', 'Image']
@@ -181,7 +171,7 @@ async function generateAvatar(gender: string, fitnessLevel: string, maxAttempts:
 }
 
 async function generateProfileContent(): Promise<Profile> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
   
   // Get random interests first
   const interests = await getRandomInterests();
@@ -234,18 +224,21 @@ async function generateProfileContent(): Promise<Profile> {
   const imageBlob = new Blob([Buffer.from(imageData, 'base64')], { type: 'image/png' });
   const imageFileName = `avatars/${profileData.displayName.toLowerCase().replace(/\s+/g, '')}-g-${Date.now()}.png`;
 
-  // Upload to Vercel Blob
-  const blob = await put(imageFileName, imageBlob, {
+  // Upload to storage
+  const storage = StorageFactory.getInstance();
+  const imageUrl = await storage.upload(imageFileName, imageBlob, {
     access: 'public',
+    contentType: 'image/png',
   });
 
   const g = gender === 'male' ? 'm' : 'f';
+  const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
   return {
-    user_id: `${profileData.displayName.toLowerCase().replace(/\s+/g, '')}-${g}-g`,
+    user_id: `${profileData.displayName.toLowerCase().replace(/\s+/g, '')}-${timestamp}-${g}-g`,
     display_name: profileData.displayName,
     bio: profileData.bio,
     interests: interests,
-    custom_avatar_url: blob.url,
+    custom_avatar_url: imageUrl,
     fitness_level: fitnessLevel as 'beginner' | 'intermediate' | 'advanced',
     gender: gender
   };

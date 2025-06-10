@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test-storage": "ts-node src/storage/test-storage.ts",
     "generate-profile": "ts-node src/profileGenerator.ts",
     "generate-post": "ts-node src/postGenerator.ts",
     "generate-comment": "ts-node src/commentGenerator.ts",
@@ -17,18 +18,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/genai": "^0.7.0",
-    "@google/generative-ai": "^0.2.1",
+    "@google/genai": "^1.4.0",
+    "@google/generative-ai": "^0.24.1",
     "@types/node": "^20.11.24",
     "@types/node-fetch": "^2.6.11",
     "@vercel/blob": "^0.22.1",
     "dotenv": "^16.4.5",
+    "minio": "^7.1.3",
     "node-fetch": "^2.7.0",
     "pg": "^8.11.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
+    "@types/minio": "^7.0.17",
     "@types/pg": "^8.11.11"
   }
 }

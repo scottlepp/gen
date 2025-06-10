@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const { GoogleGenAI } = require("@google/genai");
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
-import { put } from '@vercel/blob';
+import { StorageFactory } from './storage/StorageFactory';
 import fs from 'fs';
 import fetch from 'node-fetch';
 
@@ -137,7 +137,7 @@ async function getImageAsBase64(url: string): Promise<string> {
 }
 
 async function generatePostContent(exercise: string, profile: Profile): Promise<ExercisePost> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
   // const imageModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp-image-generation' })
 
   // Generate content about the exercise
@@ -174,9 +174,9 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   }
 
   // Generate image prompt
-  const imagePrompt = `Create a real image of a ${profile.gender} person performing ${exercise} in a gym setting. 
+  const imagePrompt = `Create a real selfie image of a ${profile.gender} person performing ${exercise} in a gym setting. 
   The person should look exactly like the person in the provided profile picture.
-  The image should look like a candid gym photo someone might post on social media.
+  The image should look like a candid selfie gym photo someone might post on social media.
   The person should be in workout clothes and the image should have good lighting.
   The style should appeal to someone interested in: ${profile.interests.join(', ')}.
   Make it look natural and not too posed or professional.
@@ -189,7 +189,7 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   const avatarBase64 = profile.custom_avatar_url ? await getImageAsBase64(profile.custom_avatar_url) : '';
   
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash-exp-image-generation',
+    model: 'gemini-2.0-flash-preview-image-generation',
     contents: [
       {
         parts: [
@@ -265,15 +265,17 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   const imageBlob = new Blob([Buffer.from(imageData, 'base64')], { type: 'image/png' });
   const imageFileName = `${exercise.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`;
 
-  // Upload to Vercel Blob
-  const blob = await put(`exercises/${imageFileName}`, imageBlob, {
+  // Upload to storage
+  const storage = StorageFactory.getInstance();
+  const imageUrl = await storage.upload(`exercises/${imageFileName}`, imageBlob, {
     access: 'public',
+    contentType: 'image/png',
   });
 
   return {
     title: postData.title || `${exercise} - Feeling Strong! 💪`,
     content: postData.content,
-    image_url: blob.url,
+    image_url: imageUrl,
     author: profile.display_name,
     user_id: profile.user_id
   };
