@@ -1,10 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-const { GoogleGenAI } = require("@google/genai");
+import { GoogleGenAI } from "@google/genai";
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import { StorageFactory } from './storage/StorageFactory';
 import fs from 'fs';
 import fetch from 'node-fetch';
+import { analyzeImage } from './analyzer';
 
 dotenv.config();
 
@@ -174,9 +175,9 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   }
 
   // Generate image prompt
-  const imagePrompt = `Create a real selfie image of a ${profile.gender} person performing ${exercise} in a gym setting. 
+  const imagePrompt = `Create a real image of a ${profile.gender} person performing ${exercise} in a gym setting. 
   The person should look exactly like the person in the provided profile picture.
-  The image should look like a candid selfie gym photo someone might post on social media.
+  The image should look like a candid gym photo someone might post on social media.
   The person should be in workout clothes and the image should have good lighting.
   The style should appeal to someone interested in: ${profile.interests.join(', ')}.
   Make it look natural and not too posed or professional.
@@ -208,9 +209,18 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
     }
   });
 
+  if (response.candidates === undefined || response.candidates.length === 0) {
+    throw new Error('Failed to generate image - no candidates');
+  }
+
+  const candidate = response.candidates[0];
+  if (candidate.content === undefined || candidate.content.parts === undefined) {
+    throw new Error('Failed to generate image - no content');
+  }
+
   let imageData: string | null = null;
 
-  for (const part of response.candidates[0].content.parts) {
+  for (const part of candidate.content.parts) {
     if (part.text) {
       console.log(part.text);
     } else if (part.inlineData && part.inlineData.data) {
@@ -225,41 +235,7 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
     throw new Error('Failed to generate image');
   }
 
-  // Analyze the generated image
-  // const analysisPrompt = `Analyze this image of a person performing ${exercise} and provide a rating from 1-10, where:
-  // 1 = Completely incorrect/unsuitable
-  // 10 = Perfect representation
-  
-  // Consider these criteria:
-  // 1. Correct exercise form (0-3 points)
-  // 2. Clear visibility of the exercise (0-2 points)
-  // 3. Image quality and lighting (0-2 points)
-  // 4. Appropriate gym setting (0-3 points)
-  
-  // Start your response with "Rating: X/10" followed by a detailed explanation of the score and any issues found.`;
-
-  // const analysisResult = await ai.models.generateContent({
-  //   model: 'gemini-2.0-flash-exp-image-generation',
-  //   contents: [
-  //     {
-  //       parts: [
-  //         { text: analysisPrompt },
-  //         {
-  //           inlineData: {
-  //             mimeType: 'image/png',
-  //             data: imageData
-  //           }
-  //         }
-  //       ]
-  //     }
-  //   ],
-  //   config: {
-  //     responseModalities: ['Text']
-  //   }
-  // });
-
-  // const analysis = analysisResult.candidates[0].content.parts[0].text;
-  // console.log('Image Analysis:', analysis);
+  imageData = await analyzeImage(exercise);
 
   // Create a Blob from the image data
   const imageBlob = new Blob([Buffer.from(imageData, 'base64')], { type: 'image/png' });

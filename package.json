@@ -12,6 +12,7 @@
     "generate-reply": "ts-node src/commentReplyGenerator.ts",
     "generate-like": "ts-node src/likeGenerator.ts",
     "generate-follower": "ts-node src/followerGenerator.ts",
+    "analyze-image": "ts-node src/analyzer.ts",
     "type-check": "tsc --noEmit"
   },
   "keywords": [],
