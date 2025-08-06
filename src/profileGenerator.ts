@@ -234,7 +234,7 @@ async function generateProfileContent(): Promise<Profile> {
   const g = gender === 'male' ? 'm' : 'f';
   const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
   return {
-    user_id: `${profileData.displayName.toLowerCase().replace(/\s+/g, '')}-${timestamp}-${g}-g`,
+    user_id: `${profileData.displayName.toLowerCase().replace(/\s+/g, '')}_${timestamp}-${g}-g`,
     display_name: profileData.displayName,
     bio: profileData.bio,
     interests: interests,
