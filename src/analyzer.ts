@@ -24,7 +24,7 @@ export async function analyzeImage(exercise: string) {
     Start your response with "Rating: X/10" followed by a detailed explanation of the score and any issues found.`;
   
     const analysisResult = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview-05-20',
+      model: 'gemini-2.5-flash',
       contents: [
         {
           parts: [
