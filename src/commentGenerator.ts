@@ -94,7 +94,7 @@ async function getRandomProfile(): Promise<{ user_id: string; display_name: stri
 }
 
 async function generateComment(post: Post, profile: { user_id: string; display_name: string }): Promise<Comment> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   // Randomly select a comment style
   const commentStyles = [
