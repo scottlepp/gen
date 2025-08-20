@@ -61,7 +61,7 @@ async function analyzeAvatar(imageData: string): Promise<boolean> {
   let analysisResult;
   try {
     console.log('Starting avatar analysis...');
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     analysisResult = await model.generateContent([
       analysisPrompt,
       {
@@ -141,7 +141,7 @@ async function generateAvatar(gender: string, fitnessLevel: string, maxAttempts:
     - The person should look like a real fitness enthusiast, not a model`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-preview-image-generation',
+      model: 'gemini-2.5-flash-preview-image-generation',
       contents: imagePrompt,
       config: {
         responseModalities: ['Text', 'Image']
@@ -171,7 +171,7 @@ async function generateAvatar(gender: string, fitnessLevel: string, maxAttempts:
 }
 
 async function generateProfileContent(): Promise<Profile> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   
   // Get random interests first
   const interests = await getRandomInterests();
