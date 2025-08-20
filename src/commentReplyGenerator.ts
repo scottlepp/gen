@@ -155,7 +155,7 @@ async function getPostAuthor(postId: number): Promise<{ user_id: string; display
 }
 
 async function generateReply(comment: Comment, post: Post, author: { user_id: string; display_name: string }): Promise<Comment> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   // Randomly select a reply style
   const replyStyles = [
