@@ -101,10 +101,10 @@ async function getRandomProfile(): Promise<Profile> {
     let genderPart: string;
     
     // Check which separator was used
-    if (dashParts.length >= 2 && (dashParts[dashParts.length-1] === 'm' || dashParts[dashParts.length-1] === 'f')) {
-      genderPart = dashParts[dashParts.length-1];
-    } else if (underscoreParts.length >= 2 && (underscoreParts[underscoreParts.length-1] === 'm' || underscoreParts[underscoreParts.length-1] === 'f')) {
-      genderPart = underscoreParts[underscoreParts.length-1];
+    if (dashParts.length >= 2 && (dashParts[dashParts.length-2] === 'm' || dashParts[dashParts.length-2] === 'f')) {
+      genderPart = dashParts[dashParts.length-2];
+    } else if (underscoreParts.length >= 2 && (underscoreParts[underscoreParts.length-2] === 'm' || underscoreParts[underscoreParts.length-2] === 'f')) {
+      genderPart = underscoreParts[underscoreParts.length-2];
     } else {
       console.error('Invalid user_id format:', user_id);
       throw new Error('Invalid user_id format - missing or invalid gender');
