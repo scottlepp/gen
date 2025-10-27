@@ -141,7 +141,7 @@ async function generateAvatar(gender: string, fitnessLevel: string, maxAttempts:
     - The person should look like a real fitness enthusiast, not a model`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-preview-image-generation',
+      model: 'gemini-2.5-flash-image',
       contents: imagePrompt,
       config: {
         responseModalities: ['Text', 'Image']
