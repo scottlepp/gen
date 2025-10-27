@@ -139,7 +139,7 @@ async function getImageAsBase64(url: string): Promise<string> {
 
 async function generatePostContent(exercise: string, profile: Profile): Promise<ExercisePost> {
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-  // const imageModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-preview-image-generation' })
+  // const imageModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-image' })
 
   // Generate content about the exercise
   const contentPrompt = `Create a social media post about doing ${exercise} today. 
@@ -190,7 +190,7 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
   const avatarBase64 = profile.custom_avatar_url ? await getImageAsBase64(profile.custom_avatar_url) : '';
   
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash-preview-image-generation',
+    model: 'gemini-2.5-flash-image',
     contents: [
       {
         parts: [
