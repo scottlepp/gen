@@ -1,15 +1,14 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-const { GoogleGenAI } = require("@google/genai");
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import { StorageFactory } from './storage/StorageFactory';
+import { ImageGenFactory } from './imageGen';
 import fs from 'fs';
 
 dotenv.config();
 
-// Initialize Gemini
+// Initialize Gemini (for text generation and image analysis)
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
-const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
 // Initialize database connection
 const pool = new Pool({
@@ -140,20 +139,9 @@ async function generateAvatar(gender: string, fitnessLevel: string, maxAttempts:
     - Professional lighting and image quality
     - The person should look like a real fitness enthusiast, not a model`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-image-preview',
-      contents: imagePrompt,
-      config: {
-        responseModalities: ['Text', 'Image']
-      },
-    });
-
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData && part.inlineData.data) {
-        imageData = part.inlineData.data;
-        break;
-      }
-    }
+    const generator = ImageGenFactory.getInstance();
+    const result = await generator.generateImage({ prompt: imagePrompt });
+    imageData = result.imageData;
 
     if (imageData) {
       hasIssues = await analyzeAvatar(imageData);

@@ -1,17 +1,16 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GoogleGenAI } from "@google/genai";
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import { StorageFactory } from './storage/StorageFactory';
+import { ImageGenFactory } from './imageGen';
 import fs from 'fs';
 import fetch from 'node-fetch';
 import { analyzeImage } from './analyzer';
 
 dotenv.config();
 
-// Initialize Gemini
+// Initialize Gemini (for text generation)
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
-const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
 // Initialize database connection
 const pool = new Pool({
@@ -188,54 +187,21 @@ async function generatePostContent(exercise: string, profile: Profile): Promise<
 
   // Fetch and convert avatar image to base64
   const avatarBase64 = profile.custom_avatar_url ? await getImageAsBase64(profile.custom_avatar_url) : '';
-  
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: [
-      {
-        parts: [
-          { text: imagePrompt },
-          ...(avatarBase64 ? [{
-            inlineData: {
-              mimeType: 'image/png',
-              data: avatarBase64
-            }
-          }] : [])
-        ]
-      }
-    ],
-    config: {
-      responseModalities: ['Text', 'Image']
-    }
+
+  const generator = ImageGenFactory.getInstance();
+  const result = await generator.generateImage({
+    prompt: imagePrompt,
+    referenceImage: avatarBase64 ? {
+      data: avatarBase64,
+      mimeType: 'image/png',
+    } : undefined,
   });
 
-  if (response.candidates === undefined || response.candidates.length === 0) {
-    throw new Error('Failed to generate image - no candidates');
-  }
+  let imageData: string = result.imageData;
 
-  const candidate = response.candidates[0];
-  if (candidate.content === undefined || candidate.content.parts === undefined) {
-    throw new Error('Failed to generate image - no content');
-  }
-
-  let imageData: string | null = null;
-
-  for (const part of candidate.content.parts) {
-    if (part.text) {
-      console.log(part.text);
-    } else if (part.inlineData && part.inlineData.data) {
-      imageData = part.inlineData.data;
-      const buffer = Buffer.from(part.inlineData.data, 'base64');
-      fs.writeFileSync('gemini-native-image.png', buffer);
-      console.log('Image saved as gemini-native-image.png');
-    }
-  }
-
-  if (!imageData) {
-    throw new Error('Failed to generate image');
-  }
-
-  imageData = await analyzeImage(exercise);
+  // Save for analysis and run quality check
+  fs.writeFileSync('gemini-native-image.png', Buffer.from(imageData, 'base64'));
+  imageData = await analyzeImage(exercise, imageData);
 
   // Create a Blob from the image data
   const imageBlob = new Blob([Buffer.from(imageData, 'base64')], { type: 'image/png' });

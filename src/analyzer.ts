@@ -7,8 +7,10 @@ dotenv.config();
 // Initialize Gemini
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
-export async function analyzeImage(exercise: string) {
-    const imageData = fs.readFileSync('gemini-native-image.png', 'base64');
+export async function analyzeImage(exercise: string, imageData?: string) {
+    if (!imageData) {
+      imageData = fs.readFileSync('gemini-native-image.png', 'base64');
+    }
   
     // Analyze the generated image
     const analysisPrompt = `Analyze this image of a person performing ${exercise} and provide a rating from 1-10, where:
