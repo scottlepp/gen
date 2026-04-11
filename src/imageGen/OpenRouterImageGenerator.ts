@@ -63,13 +63,15 @@ export class OpenRouterImageGenerator implements ImageGenerator {
         return { imageData: img, mimeType: 'image/png' };
       }
 
-      // Could be an object with url or b64_json
+      // Could be an object like { type: "image_url", image_url: { url: "data:..." } }
       if (typeof img === 'object') {
         if (img.b64_json) {
           return { imageData: img.b64_json, mimeType: img.content_type || 'image/png' };
         }
-        if (img.url) {
-          const urlMatch = img.url.match(/^data:(image\/[\w+]+);base64,(.+)$/);
+        // Handle { type: "image_url", image_url: { url: "data:..." } }
+        const url = img.image_url?.url || img.url;
+        if (url && typeof url === 'string') {
+          const urlMatch = url.match(/^data:(image\/[^;]+);base64,(.+)$/);
           if (urlMatch) {
             return { imageData: urlMatch[2], mimeType: urlMatch[1] };
           }
