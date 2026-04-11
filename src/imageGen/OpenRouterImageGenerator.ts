@@ -44,27 +44,52 @@ export class OpenRouterImageGenerator implements ImageGenerator {
       throw new Error('OpenRouter: failed to generate image - no message in response');
     }
 
-    // OpenRouter returns images as data URLs in the images array
-    const images = (message as any).images;
-    if (!images || images.length === 0) {
-      throw new Error('OpenRouter: failed to generate image - no images in response');
+    const rawMessage = message as any;
+    console.log('OpenRouter response keys:', Object.keys(rawMessage));
+
+    // Try images array first (OpenRouter's documented format)
+    const images = rawMessage.images;
+    if (images && images.length > 0) {
+      const img = images[0];
+      console.log('OpenRouter image type:', typeof img);
+
+      // Could be a data URL string
+      if (typeof img === 'string') {
+        const match = img.match(/^data:(image\/[\w+]+);base64,(.+)$/);
+        if (match) {
+          return { imageData: match[2], mimeType: match[1] };
+        }
+        // Raw base64 string
+        return { imageData: img, mimeType: 'image/png' };
+      }
+
+      // Could be an object with url or b64_json
+      if (typeof img === 'object') {
+        if (img.b64_json) {
+          return { imageData: img.b64_json, mimeType: img.content_type || 'image/png' };
+        }
+        if (img.url) {
+          const urlMatch = img.url.match(/^data:(image\/[\w+]+);base64,(.+)$/);
+          if (urlMatch) {
+            return { imageData: urlMatch[2], mimeType: urlMatch[1] };
+          }
+        }
+      }
     }
 
-    const dataUrl: string = images[0];
-
-    // Parse data URL: "data:image/png;base64,<data>"
-    const match = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
-    if (match) {
-      return {
-        imageData: match[2],
-        mimeType: match[1],
-      };
+    // Try multimodal content array (some models return parts)
+    if (Array.isArray(rawMessage.content)) {
+      for (const part of rawMessage.content) {
+        if (part.type === 'image_url' && part.image_url?.url) {
+          const match = part.image_url.url.match(/^data:(image\/[\w+]+);base64,(.+)$/);
+          if (match) {
+            return { imageData: match[2], mimeType: match[1] };
+          }
+        }
+      }
     }
 
-    // If it's raw base64 without the data URL prefix
-    return {
-      imageData: dataUrl,
-      mimeType: 'image/png',
-    };
+    console.log('OpenRouter full response message:', JSON.stringify(rawMessage, null, 2).slice(0, 500));
+    throw new Error('OpenRouter: failed to extract image data from response');
   }
 }
