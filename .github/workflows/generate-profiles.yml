@@ -39,8 +39,8 @@ jobs:
         MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
         MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
         MINIO_BUCKET_NAME: ${{ secrets.MINIO_BUCKET_NAME }}
-        IMAGE_GEN_PROVIDER: ${{ secrets.IMAGE_GEN_PROVIDER }}
-        IMAGE_GEN_MODEL: ${{ secrets.IMAGE_GEN_MODEL }}
+        IMAGE_GEN_PROVIDER: ${{ vars.IMAGE_GEN_PROVIDER }}
+        IMAGE_GEN_MODEL: ${{ vars.IMAGE_GEN_MODEL }}
         OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       run: |
         set -e
